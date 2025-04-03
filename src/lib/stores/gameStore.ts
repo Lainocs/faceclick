@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
 
-interface GameState {
+export interface GameState {
 	clicks: number
 	autoClickers: number
 	autoClickerCost: number
@@ -15,6 +15,7 @@ interface GameState {
 		autoClickers10: boolean
 		level10: boolean
 	}
+	combo: number
 }
 
 const initialState: GameState = {
@@ -32,6 +33,7 @@ const initialState: GameState = {
 		autoClickers10: false,
 		level10: false,
 	},
+	combo: 0,
 }
 
 function createGameStore() {
@@ -56,10 +58,81 @@ function createGameStore() {
 			}),
 		addBonusClicks: (amount: number) =>
 			update((state) => {
+				const newClicks = state.clicks + amount
 				const newTotalClicks = state.totalClicks + amount
+
+				// Update combo
+				const newCombo = state.combo + 1
+
+				// Check achievements
+				const newAchievements = { ...state.achievements }
+				if (newTotalClicks >= 1000 && !newAchievements.clicks1000) {
+					newAchievements.clicks1000 = true
+				}
+				if (newTotalClicks >= 10000 && !newAchievements.clicks10000) {
+					newAchievements.clicks10000 = true
+				}
+
 				return {
 					...state,
-					clicks: state.clicks + amount,
+					clicks: newClicks,
+					totalClicks: newTotalClicks,
+					combo: newCombo,
+					achievements: newAchievements,
+				}
+			}),
+		buyAutoClicker: () =>
+			update((state) => {
+				if (state.clicks >= state.autoClickerCost) {
+					const newAutoClickers = state.autoClickers + 1
+					const newCost = Math.floor(state.autoClickerCost * 1.25)
+					return {
+						...state,
+						clicks: state.clicks - state.autoClickerCost,
+						autoClickers: newAutoClickers,
+						autoClickerCost: newCost,
+						clicksPerSecond: newAutoClickers * state.autoClickerPower,
+						achievements: {
+							...state.achievements,
+							autoClickers10:
+								newAutoClickers >= 10 || state.achievements.autoClickers10,
+						},
+					}
+				}
+				return state
+			}),
+		levelUp: () =>
+			update((state) => {
+				const newLevel = state.level + 1
+				const cost = Math.floor(50 * Math.pow(1.2, newLevel - 1))
+				if (state.clicks >= cost) {
+					const newClickPower = Math.floor(
+						1 + newLevel * 0.5 + Math.pow(1.1, newLevel - 1)
+					)
+					return {
+						...state,
+						clicks: state.clicks - cost,
+						level: newLevel,
+						clickPower: newClickPower,
+						autoClickerPower: newClickPower,
+						clicksPerSecond: state.autoClickers * newClickPower,
+						achievements: {
+							...state.achievements,
+							level10: newLevel >= 10 || state.achievements.level10,
+						},
+					}
+				}
+				return state
+			}),
+		autoClick: () =>
+			update((state) => {
+				const newClicks =
+					state.clicks + state.autoClickers * state.autoClickerPower
+				const newTotalClicks =
+					state.totalClicks + state.autoClickers * state.autoClickerPower
+				return {
+					...state,
+					clicks: newClicks,
 					totalClicks: newTotalClicks,
 					achievements: {
 						...state.achievements,
@@ -69,41 +142,10 @@ function createGameStore() {
 					},
 				}
 			}),
-		buyAutoClicker: () =>
-			update((state) => {
-				if (state.clicks >= state.autoClickerCost) {
-					const newAutoClickers = state.autoClickers + 1
-					return {
-						...state,
-						clicks: state.clicks - state.autoClickerCost,
-						autoClickers: newAutoClickers,
-						autoClickerCost: Math.floor(state.autoClickerCost * 1.5),
-						clicksPerSecond: newAutoClickers * state.autoClickerPower,
-					}
-				}
-				return state
-			}),
-		levelUp: () =>
-			update((state) => {
-				const newLevel = state.level + 1
-				const cost = Math.floor(50 * Math.pow(1.3, newLevel - 1))
-				if (state.clicks >= cost) {
-					const newClickPower = Math.floor(1.5 * Math.pow(1.2, newLevel - 1))
-					return {
-						...state,
-						clicks: state.clicks - cost,
-						level: newLevel,
-						clickPower: newClickPower,
-						autoClickerPower: newClickPower,
-						clicksPerSecond: state.autoClickers * newClickPower,
-					}
-				}
-				return state
-			}),
-		autoClick: () =>
+		resetCombo: () =>
 			update((state) => ({
 				...state,
-				clicks: state.clicks + state.autoClickers * state.autoClickerPower,
+				combo: 0,
 			})),
 	}
 }

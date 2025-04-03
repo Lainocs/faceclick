@@ -18,16 +18,23 @@
 <div class="clicker-container">
 	<h1>Clicker Game</h1>
 	<div class="stats">
-		<p>Clicks: {$gameStore.clicks}</p>
-		<p>Clicks per second: {$gameStore.clicksPerSecond}</p>
-		<p>Level: {$gameStore.level}</p>
+		<div class="stat-item">
+			<span class="stat-label">Clicks:</span>
+			<span class="stat-value">{$gameStore.clicks}</span>
+		</div>
+		<div class="stat-item">
+			<span class="stat-label">Clicks per second:</span>
+			<span class="stat-value">{$gameStore.clicksPerSecond}</span>
+		</div>
+		<div class="stat-item">
+			<span class="stat-label">Level:</span>
+			<span class="stat-value">{$gameStore.level}</span>
+		</div>
+		<div class="stat-item">
+			<span class="stat-label">Click power:</span>
+			<span class="stat-value">{$gameStore.clickPower}</span>
+		</div>
 	</div>
-	<button
-		class="click-button"
-		on:click={() => gameStore.click()}
-	>
-		Click me!
-	</button>
 </div>
 
 <style>
@@ -36,31 +43,41 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 1rem;
-		padding: 2rem;
+		padding: 1rem;
+	}
+
+	h1 {
+		color: #333;
+		margin: 0;
+		font-size: 2rem;
 	}
 
 	.stats {
-		display: flex;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 		gap: 1rem;
-		font-size: 1.2rem;
+		width: 100%;
+		max-width: 600px;
 	}
 
-	.click-button {
-		padding: 1rem 2rem;
-		font-size: 1.5rem;
-		background-color: #4caf50;
-		color: white;
-		border: none;
+	.stat-item {
+		background: rgba(255, 255, 255, 0.8);
+		padding: 0.8rem;
 		border-radius: 8px;
-		cursor: pointer;
-		transition: transform 0.1s;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 
-	.click-button:hover {
-		background-color: #45a049;
+	.stat-label {
+		font-weight: 500;
+		color: #555;
 	}
 
-	.click-button:active {
-		transform: scale(0.95);
+	.stat-value {
+		font-weight: bold;
+		color: #2196f3;
+		font-size: 1.2rem;
 	}
 </style>
